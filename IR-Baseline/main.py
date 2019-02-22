@@ -15,11 +15,12 @@ if __name__=="__main__":
     #For each document in the test dataset, get the TF-IDF representation of the query and the 
     args = parser.parse_args()
     train_queries_path = os.path.join(args.path, "phrase-node-dataset","data","combined-v2-cleaned.train.jsonl")
-    print(train_queries_path)
     IDF_counter = Counter()
     processed_urls = set()
     documents = dict()
-
+    need_IDF = True
+    if not os.path.exists("IDF_Counter.pkl"):
+        need_IDF = False
 
     for counter, line in enumerate(open(train_queries_path)):
         if len(documents) >100:
@@ -34,12 +35,15 @@ if __name__=="__main__":
         doc_path = os.path.join(args.path, "phrase-node-dataset", "infos", "v6", "info-"+document+".gz")
         page_docs = get_documents_from_file(doc_path)
         documents[document] = page_docs
-        for doc in page_docs:
-            for term in doc.split(" "):
-                IDF_counter[term]+=1
+        if need_IDF:
+            for doc in page_docs:
+                for term in doc.split(" "):
+                    IDF_counter[term]+=1
         #dump IDF counter
+    if need_IDF:
         pickle.dump(IDF_counter, open("IDF_Counter.pkl", "wb"))
-        #calculate IDF for these documents
-        # print(query, document)
+    else:
+        IDF_counter = pickle.load(open("IDF_Counter.pkl"))
+
     
     # documenst_path = os.path.join(args.path, "phrase-node-dataset","infos", "v6")
