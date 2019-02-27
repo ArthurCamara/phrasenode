@@ -19,13 +19,16 @@ def generate_document(page):
         final_doc += " ".join([ps.stem(x) for x in tokenizer.tokenize(page['text'])])
     
     #step 2 - tokenize atributes
+    #these will be downweighted by alpha later. Thus, they need to be returned.
+    attributes_to_donweight = set()
     if 'attributes' in page:
         attributes_to_tokenize_and_stem = ['id', 'class', 'placeholder', 'label', 'tooltip', 'aria-text', 'name', 'src', 'href']
         for attr in attributes_to_tokenize_and_stem:
             if attr in page['attributes'] and page['attributes'][attr]:
                 clean_attr = camel_case_and_tokenizer_split(page['attributes'][attr])
+                attributes_to_donweight.add(clean_attr)
                 final_doc+=" " + clean_attr
-    return final_doc.strip()
+    return final_doc.strip(), clean_attr
 
 
 def get_documents_from_file(raw):
