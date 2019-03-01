@@ -83,4 +83,4 @@ class TF_IDF_Documents():
 
 
     def get_query_vector(self, query):
-        return self.transformer.transform(query)
+        return self.transformer.transform([query]])

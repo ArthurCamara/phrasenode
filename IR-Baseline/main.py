@@ -7,6 +7,7 @@ from collections import Counter
 import pickle
 from sklearn.feature_extraction.text import TfidfTransformer
 from tf_idf_documents import TF_IDF_Documents
+from sklearn.metrics.pairwise import cosine_similarity
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--path',)
@@ -24,11 +25,12 @@ if __name__=="__main__":
     for counter, line in enumerate(open(TF_IDF_transformer._train_queries_path)):
         line_data = json.loads(line)
         query = query_cleaner(line_data['phrase'])
-        print(query)
         page = line_data["webpage"]
-        page_docs = TF_IDF_transformer.load_docs_for_page(page)
-        
-        
+        docs_vectors = TF_IDF_transformer.load_docs_for_page(page)
+        query_vector = TF_IDF_transformer.get_query_vector(query)
+        simillarity_matrix = cosine_similarity(query_vector, docs_vectors)
+        best_match = simillarity_matrix.index(max(a))
+
         #get documents from this 
         if counter>2:
             break
