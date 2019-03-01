@@ -22,22 +22,31 @@ def generate_document(page):
     #these will be downweighted by alpha later. Thus, they need to be returned.
     attributes_to_donweight = set()
     if 'attributes' in page:
+        clean_attr = u""
         attributes_to_tokenize_and_stem = ['id', 'class', 'placeholder', 'label', 'tooltip', 'aria-text', 'name', 'src', 'href']
         for attr in attributes_to_tokenize_and_stem:
             if attr in page['attributes'] and page['attributes'][attr]:
-                clean_attr = camel_case_and_tokenizer_split(page['attributes'][attr])
-                attributes_to_donweight.add(clean_attr)
-                final_doc+=" " + clean_attr
-    return final_doc.strip(), clean_attr
+                clean_attr += camel_case_and_tokenizer_split(page['attributes'][attr]).strip()
+                attributes_to_donweight.update(set(clean_attr.split()))
+        final_doc+="-" + clean_attr
+    return (final_doc.strip(), attributes_to_donweight)
 
 
 def get_documents_from_file(raw):
     page = json.load(gz.open(raw))
     clean_docs = []
+    attributes_to_donweight = set()
     for doc in page['info']:
-        clean_doc = generate_document(doc) 
+        clean_doc, attr = generate_document(doc) 
+        attributes_to_donweight.update(attr)
         if len(clean_doc) == 0:
             continue
         clean_docs.append(clean_doc)
-    return  clean_docs
+    return  clean_docs, attributes_to_donweight
     
+def query_cleaner(query):
+    final_query = []
+    tokenizer = RegexpTokenizer(r'\w+')
+    ps = SnowballStemmer('english')
+    final_query = " ".join([ps.stem(x) for x in tokenizer.tokenize(query)])
+    return final_query
