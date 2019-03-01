@@ -6,3 +6,6 @@
 
 /data
 IR-Baseline/IDF_Counter.pkl
+.DS_Store
+IR-Baseline/.vscode/launch.json
+IR-Baseline/.vscode/settings.json
