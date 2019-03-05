@@ -8,7 +8,6 @@ from tqdm import tqdm
 class TF_IDF_Documents():
     def __init__(self, data_home, force_train=False):
         self.alpha = 3
-        #alpha is a downweigth for tokens from
         #Check if trained IDF already exists
         self._data_home = data_home
         self._trained = False

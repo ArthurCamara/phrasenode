@@ -36,7 +36,7 @@ if __name__=="__main__":
     matches = [] 
     if args.multiprocess>1:
         lines_to_process = [x for x in open(TF_IDF_transformer.test_path).readlines()]
-        with closing(multiprocessing.Pool(args.multiprocess)) as pool:
+        with closing(multiprocessing.Pool(int(args.multiprocess))) as pool:
             matches = pool.map(process_line, lines_to_process)
             pool.terminate()
     else:
