@@ -3,6 +3,7 @@ import json
 from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer, TfidfVectorizer
 from document_cleaner import get_documents_from_file
 import pickle
+from tqdm import tqdm
 
 class TF_IDF_Documents():
     def __init__(self, data_home, force_train=False):
@@ -16,31 +17,31 @@ class TF_IDF_Documents():
                                                                         "phrase-node-dataset",
                                                                         "data",
                                                                         "combined-v2-cleaned.train.jsonl")
+        self.test_path = os.path.join(data_home,
+                                                        "phrase-node-dataset",
+                                                        "data",
+                                                        "combined-v2-cleaned.test.jsonl")
 
-        if  os.path.exists("IDF_Counter.pkl") and os.path.exists("Counter.pkl") and not force_train:
+        if  os.path.exists("IDF_Counter.pkl") and os.path.exists("reverse_index.pkl") and not force_train:
             self._trained = True
             self.load_tf_idf_documents()
-            self.reverse_index = {feature: idx for idx, feature in enumerate(self.transformer.get_feature_names())}
-            return
         else:
-            self.reverse_index = {feature: idx for idx, feature in enumerate(self.transformer.get_feature_names())}
             self.generate_tf_idf_documents()
+        self.reverse_index = {feature: idx for idx, feature in enumerate(self.transformer.get_feature_names())}
     
     #Train IDF vectors
     def generate_tf_idf_documents(self):
         all_documents = []
         procesed_urls = set()
         self.all_attributes = set()
-        for counter, line in enumerate(open(self._train_queries_path)):
+        for line in tqdm(open(self._train_queries_path), desc="training TF-IDF", total=36078):
             line_data = json.loads(line)
-            query = line_data["phrase"]
+            # query = line_data["phrase"]
             document = line_data["webpage"]
-            target = line_data['equiv']
+            # target = line_data['equiv']
             if document in procesed_urls:
                 continue
             procesed_urls.add(document)
-            if len(procesed_urls) %100 ==0:
-                print(document, len(all_documents))
             doc_path = os.path.join(self._data_home, "phrase-node-dataset",
                                                     "infos", "v6", "info-"+document+".gz") 
             page_docs, attributes = get_documents_from_file(doc_path)
@@ -48,16 +49,15 @@ class TF_IDF_Documents():
             all_documents += [x.replace("-", " ") for x in page_docs]
         
         #generate a count vector and train the IDF vectors
-        # self.count_vector = CountVectorizer(encoding="utf-8", strip_accents="ascii")
-        # X = self.count_vector.fit_transform(all_documents)
         self.transformer = TfidfVectorizer()
         self.transformer.fit(all_documents)
+        self.reverse_index = {feature: idx for idx, feature in enumerate(self.transformer.get_feature_names())}
         pickle.dump(self.transformer, open("IDF_Counter.pkl", "wb"))
-        # pickle.dump(self.count_vector, open("Counter.pkl", "wb"))
+        pickle.dump(self.reverse_index, open("reverse_index.pkl", "wb"))
+
 
 #Load pre-computed TF_IDF transformer        
     def load_tf_idf_documents(self):
-        # self.count_vector = pickle.load(open("Counter.pkl", "rb"))
         self.transformer = pickle.load(open("IDF_Counter.pkl", "rb"))
 
 
@@ -66,7 +66,7 @@ class TF_IDF_Documents():
             return self.loaded_pages[page]
         doc_path = os.path.join(self._data_home, "phrase-node-dataset",
                                                  "infos", "v6", "info-"+page+".gz")
-        page_docs, attributes = get_documents_from_file(doc_path)
+        page_docs, _ = get_documents_from_file(doc_path)
         clear_page_docs = [x.replace("-", " ") for x in page_docs]
         # count_vectors = self.count_vector.transform(clear_page_docs)
         tf_idfs = self.transformer.transform(clear_page_docs)
@@ -74,13 +74,14 @@ class TF_IDF_Documents():
         for counter, doc in enumerate(page_docs):
             if "-" not in doc:
                 continue
-            for attr in attrs_to_demote:
+            attr_to_downweight = doc.split("-")[1].split(" ")
+            for attr in attr_to_downweight:
                 if len(attr) <1  or attr not in self.reverse_index:
                     continue
                 idx = self.reverse_index[attr.lower()]
                 tf_idfs[counter, idx] = tf_idfs[counter, idx]/self.alpha
-        return tf_idfs
+        return tf_idfs, page_docs
 
 
     def get_query_vector(self, query):
-        return self.transformer.transform([query]])
+        return self.transformer.transform([query])
