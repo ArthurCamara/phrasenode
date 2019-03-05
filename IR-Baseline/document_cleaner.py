@@ -61,7 +61,7 @@ def generate_document(page):
         attributes_to_tokenize_and_stem = ['id', 'class', 'placeholder', 'label', 'tooltip', 'aria-text', 'name', 'src', 'href']
         for attr in attributes_to_tokenize_and_stem:
             if attr in page['attributes'] and page['attributes'][attr]:
-                clean_attr += " ".join([ps.stem(x) for x in word_tokenize(page['attributes'][attr])]).strip()
+                clean_attr += " ".join(word_tokenize(page['attributes'][attr]))
                 attributes_to_donweight.update(set(clean_attr.split()))
         final_doc+="-" + clean_attr
     return (final_doc.strip(), attributes_to_donweight)

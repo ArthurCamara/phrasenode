@@ -23,6 +23,7 @@ if __name__=="__main__":
     # For each document in the test dataset, get the TF-IDF representation of the query and the documents
 
     matches = []    
+    #TODO paralelize this
     for line in tqdm(open(TF_IDF_transformer.test_path).readlines()):
         line_data = json.loads(line)
         query = query_cleaner(line_data['phrase'])
