@@ -15,13 +15,13 @@ from contextlib import closing
 parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--path',)
 parser.add_argument("-t", "--train", action="store_true")
-parser.add_argument("-m", "--multiprocess", argument_default="2")
+parser.add_argument("-m", "--multiprocess", default="2")
 
 def process_line(line):
     line_data = json.loads(line)
     query = query_cleaner(line_data['phrase'])
     page = line_data["webpage"]
-    docs_vectors, page_docs = TF_IDF_transformer.load_docs_for_page(page)
+    docs_vectors, _ = TF_IDF_transformer.load_docs_for_page(page)
     query_vector = TF_IDF_transformer.get_query_vector(query)
     similarity_matrix = cosine_similarity(query_vector, docs_vectors)
     best_match = similarity_matrix.argmax()
